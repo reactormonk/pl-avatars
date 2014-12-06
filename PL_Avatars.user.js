@@ -97,8 +97,9 @@ var processNames = function() {
 processNames()
 
 var obs = new MutationObserver(function (mutation, options) {
-    console.log(mutation[0].target.id)
-    if (mutation[0].target.id == "posts") {
+    var id = mutation[0].target.id
+    // First is on edit, second on quick reply.
+    if (id == "posts" || id == "cke_contents_vB_Editor_QR_editor") {
         processNames()
     }
 });
