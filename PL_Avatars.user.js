@@ -3,10 +3,17 @@
 // @namespace   plAv
 // @description Adds Eve avatars to the PL forum
 // @include     https://www.pandemic-legion.com/forums/*
-// @version     2
+// @version     2.1
 // @grant       GM_xmlhttpRequest
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js
 // ==/UserScript==
+
+if (typeof String.prototype.startsWith != 'function') {
+  // see below for better implementation!
+  String.prototype.startsWith = function (str){
+    return this.indexOf(str) == 0;
+  };
+}
 
 var scrub_fix = function(elem) { if(elem === "Xeno Szeen") { return "Xeno Szenn" } else { return elem } }
 var scrub_unfix = function(elem) { if(elem === "Xeno Szenn") { return "Xeno Szeen" } else { return elem } }
@@ -99,7 +106,7 @@ processNames()
 var obs = new MutationObserver(function (mutation, options) {
     var id = mutation[0].target.id
     // First is on edit, second on quick reply.
-    if (id == "posts" || id == "cke_contents_vB_Editor_QR_editor") {
+    if (id == "posts" || id == "cke_contents_vB_Editor_QR_editor" || id.startsWith("qr")) {
         processNames()
     }
 });
