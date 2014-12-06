@@ -41,49 +41,65 @@ var insert_avatar = function(image, userinfo) {
     image.insertAfter(userinfo.find('.username_container'));
 }
 
-var names = [];
+// Fetches additional info for corp/alliance
+var processCorp = function(charId) {
+    if ($(".jsAvatar").filter(function (index, element) {
+        // Is there such an avatar and does it not yet have corp images?
+        return ($(element).attr("data-charid") == charId && !$(element).find("corp").length)
+    }).length != 0) {
+        fetch_info(charId, function (response) {
+            var parsed = $($($.parseXML(response.responseText)).find('result'));
+            var corpId = parsed.find("corporationID").text()
+            var allianceId = parsed.find("allianceID").text()
+            var avatars = $(".jsAvatar").filter(function (index, element) {
+                return ($(element).attr("data-charid") == charId)
+            });
+            avatars.append('<img style="position: absolute; left: 2px; bottom: 2px;" class="corp" src="https://image.eveonline.com/Corporation/' + corpId + '_32.png"/>')
+            if (allianceId) {
+                avatars.append('<img style="position: absolute; right: -2px; bottom: 2px;" class="alliance" src="https://image.eveonline.com/Alliance/' + allianceId + '_32.png"/>')
+            }
+        });
+    };
+}
 
-$('.userinfo').each(function () {
-    names.push($(this).find('strong').text());
-});
-
-// Fetches name -> id mapping, so the correct images can be looked up
-fetch_names(names, function (response) {
-    var name_to_pic = {}
-    var nameId = $($.parseXML(response.responseText)).find('row').map(function() {
-        return {id: $(this).attr('characterID'), name: $(this).attr('name')};
-    });
-    nameId.each(function () {
-        name_to_pic[scrub_unfix(this.name).toLowerCase()] = '<div class="jsAvatar" style="position: relative; display: inline-block;" data-charid="' + this.id + '"> <img class="avatar" src="https://image.eveonline.com/Character/' + this.id + '_128.jpg"/></div>'
-    });
+// Fetches names and places images.
+var processNames = function() {
+    var names = [];
 
     $('.userinfo').each(function () {
-        // If there is already an avatar, use that one.
-        if(!$(this).find('a.postuseravatar').length) {
-            insert_avatar($(name_to_pic[$(this).find('strong').text().toLowerCase()]), $(this))
-        } else {
-            insert_avatar($(this).find('a.postuseravatar'), $(this));
-        }
-        // Removes the additional information, such as kills etc.
-        $(this).find("dl.userinfo_extra").remove()
+        names.push($(this).find('strong').text());
     });
 
-    // Fetches additional info for corp/alliance
-    nameId.each(function() {
-        var id = this.id
-        if ($(".jsAvatar").filter(function (index, element) {return ($(element).attr("data-charid") == id)}).length != 0) {
-            fetch_info(id, function (response) {
-                var parsed = $($($.parseXML(response.responseText)).find('result'));
-                var corpId = parsed.find("corporationID").text()
-                var allianceId = parsed.find("allianceID").text()
-                var avatars = $(".jsAvatar").filter(function (index, element) {
-                    return ($(element).attr("data-charid") == id)
-                });
-                avatars.append('<img style="position: absolute; left: 2px; bottom: 2px;" src="https://image.eveonline.com/Corporation/' + corpId + '_32.png"/>')
-                if (allianceId) {
-                    avatars.append('<img style="position: absolute; right: -2px; bottom: 2px;" src="https://image.eveonline.com/Alliance/' + allianceId + '_32.png"/>')
-                }
-            });
-        };
+    fetch_names(names, function (response) {
+        var name_to_pic = {}
+        var nameId = $($.parseXML(response.responseText)).find('row').map(function() {
+            return {id: $(this).attr('characterID'), name: $(this).attr('name')};
+        });
+        nameId.each(function () {
+            name_to_pic[scrub_unfix(this.name).toLowerCase()] = '<div class="jsAvatar" style="position: relative; display: inline-block;" data-charid="' + this.id + '"> <img class="avatar" src="https://image.eveonline.com/Character/' + this.id + '_128.jpg"/></div>'
+        });
+
+        $('.userinfo').each(function () {
+            // If there is already an avatar, use that one.
+            if(!$(this).find('a.postuseravatar').length && !$(this).find('.jsAvatar').length) {
+                insert_avatar($(name_to_pic[$(this).find('strong').text().toLowerCase()]), $(this))
+            } else {
+                insert_avatar($(this).find('a.postuseravatar'), $(this));
+            }
+            // Removes the additional information, such as kills etc.
+            $(this).find("dl.userinfo_extra").remove()
+        });
+
+        nameId.each(function() {processCorp(this.id)});
     });
+}
+
+processNames()
+
+var obs = new MutationObserver(function (mutation, options) {
+    console.log(mutation[0].target.id)
+    if (mutation[0].target.id == "posts") {
+        processNames()
+    }
 });
+obs.observe(document.getElementsByClassName("body_wrapper")[0], {childList: true, subtree: true})
