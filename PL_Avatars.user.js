@@ -71,17 +71,19 @@ fetch_names(names, function (response) {
     // Fetches additional info for corp/alliance
     nameId.each(function() {
         var id = this.id
-        fetch_info(id, function (response) {
-            var parsed = $($($.parseXML(response.responseText)).find('result'));
-            var corpId = parsed.find("corporationID").text()
-            var allianceId = parsed.find("allianceID").text()
-            var avatars = $(".jsAvatar").filter(function (index, element) {
-                return ($(element).attr("data-charid") == id)
+        if ($(".jsAvatar").filter(function (index, element) {return ($(element).attr("data-charid") == id)}).length != 0) {
+            fetch_info(id, function (response) {
+                var parsed = $($($.parseXML(response.responseText)).find('result'));
+                var corpId = parsed.find("corporationID").text()
+                var allianceId = parsed.find("allianceID").text()
+                var avatars = $(".jsAvatar").filter(function (index, element) {
+                    return ($(element).attr("data-charid") == id)
+                });
+                avatars.append('<img style="position: absolute; left: 2px; bottom: 2px;" src="https://image.eveonline.com/Corporation/' + corpId + '_32.png"/>')
+                if (allianceId) {
+                    avatars.append('<img style="position: absolute; right: -2px; bottom: 2px;" src="https://image.eveonline.com/Alliance/' + allianceId + '_32.png"/>')
+                }
             });
-            avatars.append('<img style="position: absolute; left: 2px; bottom: 2px;" src="https://image.eveonline.com/Corporation/' + corpId + '_32.png"/>')
-            if (allianceId) {
-                avatars.append('<img style="position: absolute; right: -2px; bottom: 2px;" src="https://image.eveonline.com/Alliance/' + allianceId + '_32.png"/>')
-            }
-        });
+        };
     });
 });
