@@ -3,7 +3,7 @@
 // @namespace   plAv
 // @description Adds Eve avatars to the PL forum
 // @include     https://www.pandemic-legion.com/forums/*
-// @version     1
+// @version     2
 // @grant       GM_xmlhttpRequest
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js
 // ==/UserScript==
